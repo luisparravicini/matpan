@@ -38,7 +38,7 @@ if __name__ == '__main__':
         match = re.fullmatch(conf['id_re'], name)
         if match is not None:
             id = match.group(1)
-            symbol = link.text.strip().encode().hex()
+            symbol = link.text.strip()
+            symbol = symbol.split("\n")[0]
             name = link['title']
             print(id, symbol, name)
-            print('-----')
