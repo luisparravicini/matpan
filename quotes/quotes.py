@@ -1,9 +1,12 @@
 import requests
 import time
 from bs4 import BeautifulSoup
-import cache
+from cache import Cache
 import re
 import yaml
+
+
+conf = None
 
 
 def get_url(url):
@@ -15,23 +18,34 @@ def get_url(url):
         sys.exit(1)
     return response
 
-#def get_url(url):
-#
 
-
-if __name__ == '__main__':
-    conf = None
+def _read_conf():
+    global conf
     with open('../conf.yaml', 'r') as file:
         conf = yaml.safe_load(file.read())
 
-    url = conf['url']
-    cache.setup('cache')
-    data = cache.try_get(url)
+
+def _save_conf():
+    global conf
+    with open('../conf.yaml', 'w') as file:
+        yaml.safe_dump(conf, file)
+
+
+def _setup_symbols():
+    global conf
+    symbols_key = 'symbols'
+
+    if symbols_key in conf:
+        return
+
+    symbols_url = conf['symbols_url']
+    data = cache.try_get(symbols_url)
     if data is None:
         response = get_url(url)
         data = response.text
         cache.save(url, data)
 
+    symbols = list()
     soup = BeautifulSoup(data, 'html.parser')
     for link in soup.findAll('a'):
         name = link['href']
@@ -41,4 +55,14 @@ if __name__ == '__main__':
             symbol = link.text.strip()
             symbol = symbol.split("\n")[0]
             name = link['title']
-            print(id, symbol, name)
+            symbols.append((id, symbol, name))
+
+    conf[symbols_key] = symbols
+    print('parsed', len(symbols), 'symbols')
+    _save_conf()
+
+
+if __name__ == '__main__':
+    cache = Cache('cache')
+    _read_conf()
+    _setup_symbols()
