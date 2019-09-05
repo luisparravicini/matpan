@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup
 from cache import Cache
 import re
 import yaml
+from random import shuffle
 
 
 conf = None
@@ -62,7 +63,18 @@ def _setup_symbols():
     _save_conf()
 
 
+def _update_prices():
+    global conf
+
+    symbols = conf['symbols'].copy()
+    shuffle(symbols)
+    for datum in symbols:
+        id, symbol, _ = datum
+        print(id, symbol)
+
+
 if __name__ == '__main__':
     cache = Cache('cache')
     _read_conf()
     _setup_symbols()
+    _update_prices()
