@@ -82,7 +82,7 @@ def _update_prices():
     global conf
 
     symbols = conf['symbols'].copy()
-    # shuffle(symbols)
+    shuffle(symbols)
     for datum in symbols:
         id, symbol, _ = datum
         print(symbol)
