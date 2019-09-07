@@ -5,10 +5,19 @@ import yaml
 from random import shuffle
 from datetime import datetime
 from downloader import Downloader
+import os
 
 
 conf = None
 downloader = None
+prices = None
+
+
+class Prices:
+    def __init__(self, base_dir, se):
+        self.se = se
+        self.prices_path = os.path.join(base_dir, se)
+        os.makedirs(self.prices_path, exist_ok=True)
 
 
 def _read_conf():
@@ -58,10 +67,9 @@ def _update_prices():
     shuffle(symbols)
     for datum in symbols:
         id, symbol, _ = datum
-        print(symbol)
 
-        start_date = datetime.strptime('2018-01-01', '%Y-%m-%d')
-        end_date = datetime.strptime('2019-09-01', '%Y-%m-%d')
+        start_date = datetime.strptime('2018-01-01', '%Y-%m-%d').date()
+        end_date = datetime.strptime('2019-09-01', '%Y-%m-%d').date()
 
         date_range = " - ".join([
             start_date.strftime('%d/%m/%Y'),
@@ -73,14 +81,32 @@ def _update_prices():
         req_data[params['id']] = id
         req_data = {**req_data, **params['extras']}
 
+        print(f'{symbol}\t{start_date.isoformat()} - {end_date.isoformat()}')
+
         price_url = conf['price_url']
         data = downloader.post(price_url, req_data)
+
+        symbols = list()
+        soup = BeautifulSoup(data, 'html.parser')
+        for row in soup.findAll('tr'):
+            if len(row.findAll('th')) == 8:
+                continue
+
+            cols = row.findAll('td')
+            if len(cols) != 8:
+                print('Unpexected number of columns')
+                os.sys.exit(1)
+
+            datum = [x.text for x in cols]
+
+            # date, price_open, price_max, price_min, price_close, price_adj_close, volume, nominal_volume = datum
 
         # print(data)
 
 
 if __name__ == '__main__':
-    downloader = Downloader('cache')
     _read_conf()
+    downloader = Downloader('cache')
+    prices = Prices('prices', conf['se'])
     _setup_symbols()
     _update_prices()

@@ -13,8 +13,7 @@ class Cache:
         self._cache_path = path
         # if os.path.exists(path):
         #     shutil.rmtree(path)
-        if not os.path.isdir(path):
-            os.mkdir(path)
+        os.makedirs(path, exist_ok=True)
 
     def save(self, method, url, data, params=None):
         path = self._to_fname(method, url, params)

@@ -1,4 +1,5 @@
 import requests
+import os
 from cache import Cache
 
 class Downloader:
@@ -38,4 +39,4 @@ class Downloader:
         status = response.status_code
         if status != 200:
             print(f'Unexpected response status: {status}')
-            sys.exit(1)
+            os.sys.exit(1)
