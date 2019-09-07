@@ -3,7 +3,7 @@ from bs4 import BeautifulSoup
 import re
 import yaml
 from random import shuffle
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from downloader import Downloader
 import os
 import pandas as pd
@@ -95,13 +95,22 @@ def _update_prices():
     for datum in symbols:
         id, symbol, _ = datum
 
+        print(symbol, end='\t')
+
         start_date = to_date('2018-01-01')
         end_date = date.today()
-        # weekday()
 
         cur_prices = prices_manager.load(symbol)
         if cur_prices is not None:
-            start_date = cur_prices.index.max().date()
+            if cur_prices.empty:
+                print('empty')
+                continue
+
+            start_date = cur_prices.index.max().date() + timedelta(days=1)
+
+        if end_date == start_date:
+            print()
+            continue
 
         date_range = " - ".join([
             to_req_str(start_date),
@@ -113,7 +122,7 @@ def _update_prices():
         req_data[params['id']] = id
         req_data = {**req_data, **params['extras']}
 
-        print(f'{symbol}\t{start_date.isoformat()} - {end_date.isoformat()}')
+        print(f'{start_date.isoformat()} - {end_date.isoformat()}')
 
         price_url = conf['price_url']
         data = downloader.post(price_url, req_data)
