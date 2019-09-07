@@ -3,22 +3,36 @@ from bs4 import BeautifulSoup
 import re
 import yaml
 from random import shuffle
-from datetime import datetime
+from datetime import datetime, date
 from downloader import Downloader
 import os
+import pandas as pd
 
 
 conf = None
 downloader = None
-prices = None
+prices_manager = None
 
 
 class Prices:
+    EXT = '.csv'
+
     def __init__(self, base_dir, se):
         self.se = se
         self.prices_path = os.path.join(base_dir, se)
         os.makedirs(self.prices_path, exist_ok=True)
 
+    def save(self, symbol, data):
+        path = os.path.join(self.prices_path, symbol + Prices.EXT)
+        data.to_csv(path, index_label='Date')
+
+    def load(self, symbol):
+        path = os.path.join(self.prices_path, symbol + Prices.EXT)
+        if os.path.exists(path):
+            return pd.read_csv(path,
+                               parse_dates=True,
+                               index_col='Date')
+        return None
 
 def _read_conf():
     global conf
@@ -59,21 +73,39 @@ def _setup_symbols():
     _save_conf()
 
 
+def to_date(s):
+    return datetime.strptime(s, '%Y-%m-%d').date()
+
+
+def to_req_str(d):
+    return d.strftime('%d/%m/%Y')
+
+
+def from_req_str(s):
+    return datetime.strptime(s, '%m/%d/%Y').date()
+
+
 def _update_prices():
     global conf
     global downloader
+    global prices_manager
 
     symbols = conf['symbols'].copy()
-    shuffle(symbols)
+    # shuffle(symbols)
     for datum in symbols:
         id, symbol, _ = datum
 
-        start_date = datetime.strptime('2018-01-01', '%Y-%m-%d').date()
-        end_date = datetime.strptime('2019-09-01', '%Y-%m-%d').date()
+        start_date = to_date('2018-01-01')
+        end_date = date.today()
+        # weekday()
+
+        cur_prices = prices_manager.load(symbol)
+        if cur_prices is not None:
+            start_date = cur_prices.index.max().date()
 
         date_range = " - ".join([
-            start_date.strftime('%d/%m/%Y'),
-            end_date.strftime('%d/%m/%Y'),
+            to_req_str(start_date),
+            to_req_str(end_date),
         ])
         req_data = dict()
         params = conf['price_params']
@@ -86,7 +118,8 @@ def _update_prices():
         price_url = conf['price_url']
         data = downloader.post(price_url, req_data)
 
-        symbols = list()
+        dates = list()
+        prices_data = list()
         soup = BeautifulSoup(data, 'html.parser')
         for row in soup.findAll('tr'):
             if len(row.findAll('th')) == 8:
@@ -99,14 +132,33 @@ def _update_prices():
 
             datum = [x.text for x in cols]
 
-            # date, price_open, price_max, price_min, price_close, price_adj_close, volume, nominal_volume = datum
+            row_date = from_req_str(datum[0])
+            dates.append(row_date)
 
-        # print(data)
+            cols = [float(x.replace(',', '')) for x in datum[1:]]
+            prices_data.append(cols)
+
+        prices = pd.DataFrame(data=prices_data,
+                              index=dates,
+                              columns=[
+                                'Open', 'Max', 'Min',
+                                'Close', 'Adj Close',
+                                'Volume',
+                                'Nominal volume'
+                              ])
+        prices.index.name = 'Date'
+
+        if cur_prices is None:
+            cur_prices = prices
+        else:
+            cur_prices = cur_prices.append(prices, sort=True)
+
+        prices_manager.save(symbol, cur_prices)
 
 
 if __name__ == '__main__':
     _read_conf()
     downloader = Downloader('cache')
-    prices = Prices('prices', conf['se'])
+    prices_manager = Prices('prices', conf['se'])
     _setup_symbols()
     _update_prices()
