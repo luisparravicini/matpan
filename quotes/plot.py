@@ -1,5 +1,6 @@
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
+import matplotlib as mpl
 import seaborn as sns
 from pandas.plotting import register_matplotlib_converters
 # pip install --user
@@ -25,9 +26,21 @@ def plot_data(ax, start_date, end_date, quotes, series, signals, show_candlestic
 
     for index, value in signals.loc[start_date:end_date].iteritems():
         if value > 0:
-            ax.axvline(x=index, color='green')
+            ax.plot(
+                index,
+                data[index],
+                marker=mpl.markers.CARETUPBASE,
+                color='green',
+                markersize=8
+            )
         if value < 0:
-            ax.axvline(x=index, color='red')
+            ax.plot(
+                index,
+                data[index],
+                marker=mpl.markers.CARETDOWNBASE,
+                color='red',
+                markersize=8
+            )
 
     ax.legend(loc='best')
     ax.set_ylabel('$')
