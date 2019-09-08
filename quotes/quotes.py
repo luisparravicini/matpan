@@ -97,7 +97,7 @@ def _update_prices():
 
         print(symbol, end='\t')
 
-        start_date = to_date('2018-01-01')
+        start_date = to_date('2017-01-01')
         end_date = date.today()
 
         cur_prices = prices_manager.load(symbol)
@@ -161,6 +161,7 @@ def _update_prices():
             cur_prices = prices
         else:
             cur_prices = cur_prices.append(prices, sort=True)
+            cur_prices.drop_duplicates(keep='last', inplace=True)
 
         prices_manager.save(symbol, cur_prices)
 
