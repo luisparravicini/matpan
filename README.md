@@ -12,7 +12,7 @@ Charts
 
 There are two subplots, one with all the data available, the other with a shorter time frame.
 
-The green and red vertical lines are buy and sell signals created using a crossover of a short and medium moving average.
+The green and red triangles are buy and sell signals created using a crossover of a short and medium moving average.
 
 
 Fetching data
