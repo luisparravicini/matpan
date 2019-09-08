@@ -1,30 +1,17 @@
 import time
 from bs4 import BeautifulSoup
 import re
-import yaml
 from random import shuffle
 from datetime import datetime, date, timedelta
 from downloader import Downloader
 import os
 import pandas as pd
 from prices import Prices
+from conf import Configuration
 
 conf = None
 downloader = None
 prices_manager = None
-
-
-
-def _read_conf():
-    global conf
-    with open('../conf.yaml', 'r') as file:
-        conf = yaml.safe_load(file.read())
-
-
-def _save_conf():
-    global conf
-    with open('../conf.yaml', 'w') as file:
-        yaml.safe_dump(conf, file)
 
 
 def _setup_symbols():
@@ -148,7 +135,7 @@ def _update_prices():
 
 
 if __name__ == '__main__':
-    _read_conf()
+    conf = Configuration('..')
     downloader = Downloader('cache')
     prices_manager = Prices('prices', conf['se'])
     _setup_symbols()
