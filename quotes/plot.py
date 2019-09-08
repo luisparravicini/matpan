@@ -11,7 +11,6 @@ register_matplotlib_converters()
 
 
 def plot_data(ax, start_date, end_date, quotes, series, signals, show_candlestick):
-    my_year_month_fmt = mdates.DateFormatter('%Y-%m-%d')
     if show_candlestick:
         candlestick_ohlc(ax, quotes, width=0.5, colorup='g', colordown='r')
 
@@ -44,6 +43,7 @@ def plot_data(ax, start_date, end_date, quotes, series, signals, show_candlestic
 
     ax.legend(loc='best')
     ax.set_ylabel('$')
+    my_year_month_fmt = mdates.DateFormatter('%Y-%m-%d')
     ax.xaxis.set_major_formatter(my_year_month_fmt)
 
     # post PASO
