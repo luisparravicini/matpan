@@ -9,9 +9,10 @@ from mpl_finance import candlestick_ohlc
 register_matplotlib_converters()
 
 
-def plot_data(ax, start_date, end_date, quotes, series, signals):
+def plot_data(ax, start_date, end_date, quotes, series, signals, show_candlestick):
     my_year_month_fmt = mdates.DateFormatter('%Y-%m-%d')
-    candlestick_ohlc(ax, quotes, width=0.5, colorup='g', colordown='r')
+    if show_candlestick:
+        candlestick_ohlc(ax, quotes, width=0.5, colorup='g', colordown='r')
 
     for s in series:
         data = s[0]
@@ -53,9 +54,25 @@ def plot(range_dates, zoom_dates, symbol, data, series, signals):
     plt.suptitle(symbol)
 
     quotes = quotes_range(range_dates, data)
-    plot_data(ax[0], range_dates[0], range_dates[1], quotes, series, signals)
+    plot_data(
+        ax[0],
+        range_dates[0],
+        range_dates[1],
+        quotes,
+        series,
+        signals,
+        False
+    )
 
     quotes = quotes_range(zoom_dates, data)
-    plot_data(ax[1], zoom_dates[0], zoom_dates[1], quotes, series, signals)
+    plot_data(
+        ax[1],
+        zoom_dates[0],
+        zoom_dates[1],
+        quotes,
+        series,
+        signals,
+        True
+    )
 
     return fig

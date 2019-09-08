@@ -78,7 +78,6 @@ for symbol in symbols:
                     (ma_med, 'EMA 20'),
                ), signals)
 
-
     plt.savefig('charts/' + symbol + '.png')
     # plt.show()
     plt.close(fig)
