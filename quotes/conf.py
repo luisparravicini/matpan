@@ -15,6 +15,9 @@ class Configuration:
     def __contains__(self, item):
         return item in self.conf
 
+    def symbols(self):
+        return [x[1] for x in self['symbols']]
+
     def _load(self):
         with open(self.path, 'r') as file:
             self.conf = yaml.safe_load(file.read())
