@@ -10,6 +10,17 @@ from mpl_finance import candlestick_ohlc
 register_matplotlib_converters()
 
 
+def plot_signal(ax, index, data, marker, color):
+    ax.plot(
+        index,
+        data.loc[index],
+        linestyle='',
+        marker=marker,
+        color=color,
+        markersize=8
+    )
+
+
 def plot_data(ax, start_date, end_date, quotes, series, signals, show_candlestick):
     if show_candlestick:
         candlestick_ohlc(ax, quotes, width=0.5, colorup='g', colordown='r')
@@ -23,23 +34,13 @@ def plot_data(ax, start_date, end_date, quotes, series, signals, show_candlestic
             label=label
         )
 
-    for index, value in signals.loc[start_date:end_date].iteritems():
-        if value > 0:
-            ax.plot(
-                index,
-                data[index],
-                marker=mpl.markers.CARETUPBASE,
-                color='green',
-                markersize=8
-            )
-        if value < 0:
-            ax.plot(
-                index,
-                data[index],
-                marker=mpl.markers.CARETDOWNBASE,
-                color='red',
-                markersize=8
-            )
+    x_signals = signals.loc[start_date:end_date]
+    x_signals = x_signals[x_signals > 0]
+    plot_signal(ax, x_signals.index, data, mpl.markers.CARETUPBASE, 'green')
+
+    x_signals = signals.loc[start_date:end_date]
+    x_signals = x_signals[x_signals < 0]
+    plot_signal(ax, x_signals.index, data, mpl.markers.CARETDOWNBASE, 'red')
 
     ax.legend(loc='best')
     ax.set_ylabel('$')

@@ -49,7 +49,6 @@ for symbol in symbols:
         col = 'sma_%d' % i
         mas[col] = close.rolling(i).mean()
         col = 'ema_%d' % i
-        # adjust=False specifies that we are interested in the recursive calculation mode.
         mas[col] = close.ewm(span=i, adjust=False).mean()
 
     ma_short = mas['ema_5']
