@@ -1,10 +1,8 @@
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import matplotlib as mpl
-import seaborn as sns
+#import seaborn as sns
 from pandas.plotting import register_matplotlib_converters
-# pip install --user
-# https://github.com/matplotlib/mpl_finance/archive/master.zip
 from mpl_finance import candlestick_ohlc
 
 register_matplotlib_converters()

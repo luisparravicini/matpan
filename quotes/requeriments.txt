@@ -1,3 +1,7 @@
 requests
 beautifulsoup4
 pyyaml
+pandas
+pandas_datareader
+matplotlib
+-e git://github.com/matplotlib/mpl_finance/#egg=mpl_finance
