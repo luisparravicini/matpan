@@ -48,6 +48,10 @@ for symbol in symbols:
     data = load_data(range_dates[0], range_dates[1], symbol)
     close = data['Adj Close']
 
+    if close.isnull().all():
+        print("\t is empty")
+        continue
+
     signals = pd.DataFrame(index=data.index)
     for i in range(2, 200):
         col = 'sma_%d' % i
