@@ -15,7 +15,7 @@ def plot_signal(ax, index, data, marker, color):
         linestyle='',
         marker=marker,
         color=color,
-        markersize=8
+        markersize=12
     )
 
 
@@ -33,11 +33,11 @@ def plot_data(ax, start_date, end_date, quotes, series, signals, show_candlestic
         )
 
     x_signals = signals.loc[start_date:end_date]
-    x_signals = x_signals[x_signals > 0]
+    x_signals = x_signals.loc[x_signals['position'] > 0]
     plot_signal(ax, x_signals.index, data, mpl.markers.CARETUPBASE, 'green')
 
     x_signals = signals.loc[start_date:end_date]
-    x_signals = x_signals[x_signals < 0]
+    x_signals = x_signals.loc[x_signals['position'] < 0]
     plot_signal(ax, x_signals.index, data, mpl.markers.CARETDOWNBASE, 'red')
 
     ax.legend(loc='best')

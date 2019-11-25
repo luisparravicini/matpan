@@ -31,7 +31,7 @@ se = 'bcba'
 today = date.today()
 range_dates = ('2017-01-01', today.isoformat())
 zoom_dates = (
-    (today - timedelta(days=20)).isoformat(),
+    (today - timedelta(days=40)).isoformat(),
     today)
 symbols = conf.symbols()
 
@@ -48,28 +48,24 @@ for symbol in symbols:
     data = load_data(range_dates[0], range_dates[1], symbol)
     close = data['Adj Close']
 
-    mas = dict()
+    signals = pd.DataFrame(index=data.index)
     for i in range(2, 200):
         col = 'sma_%d' % i
-        mas[col] = close.rolling(i).mean()
+        signals[col] = close.rolling(i).mean()
         col = 'ema_%d' % i
-        mas[col] = close.ewm(span=i, adjust=False).mean()
+        signals[col] = close.ewm(span=i, adjust=False).mean()
 
-    ma_short = mas['ema_5']
-    ma_med = mas['ema_20']
+    short_window = 5
+    long_window = 20
+    ma_short = signals['ema_%d' % short_window]
+    ma_long = signals['ema_%d' % long_window]
 
-    signals = None
-    # signals = pd.DataFrame(index=ma_short.index)
-    # signals = signals[np.where(ma_short > ma_med, 1, -1)]
-    # signals = signals.diff()
-    signals = ma_short - ma_med
-    signals[signals > 0] = 1
-    signals[signals < 0] = -1
-    signals = signals.diff()
-    signals[signals > 0] = 1
-    signals[signals < 0] = -1
+    signals['signal'] = 0
+    signals['signal'][short_window:] = np.where(
+                                            ma_short[short_window:] > ma_long[short_window:], 1, 0)
+    signals['position'] = signals['signal'].diff()
 
-    action = signals[range_dates[1]]
+    action = signals['position'][range_dates[1]]
     if action != 0:
         msg = "sell" if action < 0 else "buy"
         print("\tsignal:", msg)
@@ -77,8 +73,8 @@ for symbol in symbols:
     fig = plot(range_dates, zoom_dates, symbol, data,
                (
                     (close, 'Price'),
-                    (ma_short, 'EMA 5'),
-                    (ma_med, 'EMA 20'),
+                    (ma_short, 'EMA %d' % short_window),
+                    (ma_long, 'EMA %d' % long_window),
                ), signals)
 
     plt.savefig('charts/' + symbol + '.png')
