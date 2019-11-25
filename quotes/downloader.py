@@ -30,7 +30,7 @@ class Downloader:
         return response
 
     def _do_post(self, url, req_data):
-        print(f'fetching {url} with {req_data}')
+        # print(f'fetching {url} with {req_data}')
         response = requests.post(url, data=req_data)
         self._check_is_ok(response)
         return response
