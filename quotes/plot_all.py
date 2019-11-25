@@ -44,13 +44,14 @@ for symbol in symbols:
         print(symbol, '(blacklisted)')
         continue
 
-    print(symbol)
     data = load_data(range_dates[0], range_dates[1], symbol)
     close = data['Adj Close']
 
     if close.isnull().all():
-        print("\t is empty")
+        print(symbol, '(empty)')
         continue
+
+    print(symbol)
 
     signals = pd.DataFrame(index=data.index)
     for i in range(2, 200):
