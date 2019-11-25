@@ -46,7 +46,7 @@ def plot_data(ax, start_date, end_date, quotes, series, signals, show_candlestic
     ax.xaxis.set_major_formatter(my_year_month_fmt)
 
     # post PASO
-    ax.axvline(x='2019-08-12', color='grey')
+    # ax.axvline(x='2019-08-12', color='grey')
 
 
 def quotes_range(date_range, quotes):

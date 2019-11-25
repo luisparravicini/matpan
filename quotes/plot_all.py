@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 
 from conf import Configuration
 from prices import Prices
+from datetime import date, timedelta
 
 
 prices_manager = None
@@ -27,8 +28,11 @@ def load_data(start_date, end_date, symbol):
 conf = Configuration('..')
 prices_manager = Prices('prices', conf['se'])
 se = 'bcba'
-range_dates = ('2017-01-01', '2019-09-06')
-zoom_dates = ('2019-08-05', range_dates[1])
+today = date.today()
+range_dates = ('2017-01-01', today.isoformat())
+zoom_dates = (
+    (today - timedelta(days=20)).isoformat(),
+    today)
 symbols = conf.symbols()
 
 blacklist = set(['CAPU', 'PESA', 'PSUR', 'POLL'])
