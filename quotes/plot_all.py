@@ -5,7 +5,6 @@ from pandas_datareader import data
 import numpy as np
 
 from plot import plot
-import matplotlib.pyplot as plt
 
 from conf import Configuration
 from prices import Prices
@@ -38,6 +37,11 @@ symbols = conf.symbols()
 blacklist = set(['CAPU', 'PESA', 'PSUR', 'POLL'])
 
 print("using dates [%s - %s]" % range_dates)
+
+create_plot = False
+
+if create_plot:
+    import matplotlib.pyplot as plt
 
 for symbol in symbols:
     if symbol in blacklist:
@@ -75,13 +79,14 @@ for symbol in symbols:
         msg = "sell" if action < 0 else "buy"
         print("\tsignal:", msg)
 
-    fig = plot(range_dates, zoom_dates, symbol, data,
-               (
-                    (close, 'Price'),
-                    (ma_short, 'EMA %d' % short_window),
-                    (ma_long, 'EMA %d' % long_window),
-               ), signals)
+    if create_plot:
+        fig = plot(range_dates, zoom_dates, symbol, data,
+                   (
+                        (close, 'Price'),
+                        (ma_short, 'EMA %d' % short_window),
+                        (ma_long, 'EMA %d' % long_window),
+                   ), signals)
 
-    plt.savefig('charts/' + symbol + '.png')
-    # plt.show()
-    plt.close(fig)
+        plt.savefig('charts/' + symbol + '.png')
+        # plt.show()
+        plt.close(fig)
