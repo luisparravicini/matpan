@@ -79,6 +79,29 @@ for symbol in symbols:
         msg = "sell" if action < 0 else "buy"
         print("\tsignal:", msg)
 
+
+    initial_capital = 1000000
+    shares = 1000
+    positions = pd.DataFrame(index=signals.index).fillna(0)
+    positions['position'] = shares * signals['signal']
+    portfolio = positions.multiply(close, axis=0)
+
+    pos_diff = portfolio.diff();
+
+    portfolio['holdings'] = (positions.multiply(close, axis=0)).sum(axis=1)
+    portfolio['cash'] = initial_capital - (pos_diff.multiply(close, axis=0)).sum(axis=1).cumsum()
+    portfolio['total'] = portfolio['cash'] + portfolio['holdings']
+    portfolio['returns'] = portfolio['total'].pct_change()
+
+    del portfolio['position']
+    
+    # print(portfolio.tail())
+    value = portfolio['total'].tail(1).values[0]
+    total_return = ((value / initial_capital) - 1) * 100
+    print(value, total_return)
+
+
+
     if create_plot:
         fig = plot(range_dates, zoom_dates, symbol, data,
                    (
