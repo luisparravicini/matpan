@@ -74,10 +74,11 @@ for symbol in symbols:
                                             ma_short[short_window:] > ma_long[short_window:], 1, 0)
     signals['position'] = signals['signal'].diff()
 
-    action = signals['position'][range_dates[1]]
-    if action != 0:
-        msg = "sell" if action < 0 else "buy"
-        print("\tsignal:", msg)
+    # should you buy/sell today?
+    # action = signals['position'][range_dates[1]]
+    # if action != 0:
+    #     msg = "sell" if action < 0 else "buy"
+    #     print("\tsignal:", msg)
 
 
     initial_capital = 1000000
@@ -98,8 +99,9 @@ for symbol in symbols:
     # print(portfolio.tail())
     value = portfolio['total'].tail(1).values[0]
     total_return = ((value / initial_capital) - 1) * 100
-    print(value, total_return)
+    print(f'value: ${value:.2f}, total returns: {total_return:.2f}%')
 
+    print(portfolio)
 
 
     if create_plot:
