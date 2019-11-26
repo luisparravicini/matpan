@@ -23,6 +23,27 @@ def load_data(start_date, end_date, symbol):
     return data
     # return data.loc[start_date:end_date]
 
+def load_all_data(blacklist):
+    print('loading quotes')
+
+    all_data = dict()
+    for symbol in symbols:
+        if symbol in blacklist:
+            print(symbol, '(blacklisted)')
+            continue
+
+        data = load_data(range_dates[0], range_dates[1], symbol)
+        close = data['Adj Close']
+
+        if close.isnull().all():
+            print(symbol, '(empty)')
+            continue
+
+        all_data[symbol] = data
+        print(symbol, end="\r")
+
+    return all_data
+
 
 conf = Configuration('..')
 prices_manager = Prices('prices', conf['se'])
@@ -43,26 +64,18 @@ create_plot = False
 if create_plot:
     import matplotlib.pyplot as plt
 
-for symbol in symbols:
-    if symbol in blacklist:
-        print(symbol, '(blacklisted)')
-        continue
-
-    data = load_data(range_dates[0], range_dates[1], symbol)
-    close = data['Adj Close']
-
-    if close.isnull().all():
-        print(symbol, '(empty)')
-        continue
-
+all_data = load_all_data(blacklist)
+for symbol, data in all_data.items():
     print(symbol)
 
-    signals = pd.DataFrame(index=data.index)
+    price = data['Adj Close']
+
+    signals = pd.DataFrame(index=price.index)
     for i in range(2, 200):
         col = 'sma_%d' % i
-        signals[col] = close.rolling(i).mean()
+        signals[col] = price.rolling(i).mean()
         col = 'ema_%d' % i
-        signals[col] = close.ewm(span=i, adjust=False).mean()
+        signals[col] = price.ewm(span=i, adjust=False).mean()
 
     short_window = 5
     long_window = 20
@@ -85,12 +98,12 @@ for symbol in symbols:
     shares = 1000
     positions = pd.DataFrame(index=signals.index).fillna(0)
     positions['position'] = shares * signals['signal']
-    portfolio = positions.multiply(close, axis=0)
+    portfolio = positions.multiply(price, axis=0)
 
     pos_diff = portfolio.diff();
 
-    portfolio['holdings'] = (positions.multiply(close, axis=0)).sum(axis=1)
-    portfolio['cash'] = initial_capital - (pos_diff.multiply(close, axis=0)).sum(axis=1).cumsum()
+    portfolio['holdings'] = (positions.multiply(price, axis=0)).sum(axis=1)
+    portfolio['cash'] = initial_capital - (pos_diff.multiply(price, axis=0)).sum(axis=1).cumsum()
     portfolio['total'] = portfolio['cash'] + portfolio['holdings']
     portfolio['returns'] = portfolio['total'].pct_change()
 
@@ -101,13 +114,10 @@ for symbol in symbols:
     total_return = ((value / initial_capital) - 1) * 100
     print(f'value: ${value:.2f}, total returns: {total_return:.2f}%')
 
-    print(portfolio)
-
-
     if create_plot:
         fig = plot(range_dates, zoom_dates, symbol, data,
                    (
-                        (close, 'Price'),
+                        (price, 'Price'),
                         (ma_short, 'EMA %d' % short_window),
                         (ma_long, 'EMA %d' % long_window),
                    ), signals)
