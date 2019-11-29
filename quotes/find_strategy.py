@@ -10,22 +10,29 @@ from prices import Prices
 from datetime import date, timedelta
 from loader import load_all_data
 
+import os
+import pickle
 
-conf = Configuration('..')
-prices_manager = Prices('prices', conf['se'])
-se = 'bcba'
-today = date.today()
-range_dates = ('2017-01-01', today.isoformat())
-zoom_dates = (
-    (today - timedelta(days=40)).isoformat(),
-    today)
-symbols = conf.symbols()
 
-blacklist = set(['CAPU', 'PESA', 'PSUR', 'POLL'])
+class CheckpointManager:
+    def __init__(self, data_path):
+        self.data_path = data_path
 
-print("using dates [%s - %s]" % range_dates)
+    def load(self):
+        if not self.has_checkpoint():
+            return None
 
-all_data = load_all_data(prices_manager, blacklist, symbols, range_dates)
+        with open(self.data_path, 'rb') as file:
+            return pickle.load(file)
+
+    def has_checkpoint(self):
+        return os.path.exists(self.data_path)
+
+    def save(self, data):
+        with open(self.data_path, 'wb') as file:
+            pickle.dump(data, file)
+
+
 
 class ReturnsManager:
     def __init__(self, symbols, days_range, min_days):
@@ -62,11 +69,41 @@ class ReturnsManager:
         return values
 
 
+
+conf = Configuration('..')
+
+ckp_manager = CheckpointManager('checkpoint.pickle')
+
+if ckp_manager.has_checkpoint():
+    print('loading last checkpoint')
+    data = ckp_manager.load()
+    symbols = data['symbols']
+    all_data = data['all_data']
+    last_symbol = data['last_symbol']
+    days_range = data['days_range']
+    min_days = data['min_days']
+    returns = data['returns']
+else:
+    prices_manager = Prices('prices', conf['se'])
+    today = date.today()
+    range_dates = ('2017-01-01', today.isoformat())
+    blacklist = set(['CAPU', 'PESA', 'PSUR', 'POLL'])
+    symbols = conf.symbols()
+    all_data = load_all_data(prices_manager, blacklist, symbols, range_dates)
+    print("using dates [%s - %s]" % range_dates)
+    last_symbol = None
+    days_range = (5, 300)
+    min_days = 4
+    returns = ReturnsManager(all_data.keys(), days_range, min_days)
+
+
 print()
-days_range = (5, 90)#200)
-min_days = 4
-returns = ReturnsManager(all_data.keys(), days_range, min_days)
 for symbol, data in all_data.items():
+    if last_symbol is not None:
+        if last_symbol == symbol:
+            last_symbol = None
+        continue
+
     price = data['Adj Close']
 
     signals = pd.DataFrame(index=price.index)
@@ -123,5 +160,14 @@ for symbol, data in all_data.items():
             # print(f'ma: [{short_window}, {long_window}], value: ${value:.2f}, total returns: {total_return:.2f}%')
 
     print(f"\r{symbol}", returns.max_for(symbol))
+    state = {
+        'all_data': all_data,
+        'last_symbol': symbol,
+        'symbols': symbols,
+        'days_range': days_range,
+        'min_days': min_days,
+        'returns': returns,
+    }
+    ckp_manager.save(state)
 
 print(returns)

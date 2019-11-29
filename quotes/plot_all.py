@@ -15,7 +15,6 @@ from loader import load_all_data
 
 conf = Configuration('..')
 prices_manager = Prices('prices', conf['se'])
-se = 'bcba'
 today = date.today()
 range_dates = ('2017-01-01', today.isoformat())
 zoom_dates = (
