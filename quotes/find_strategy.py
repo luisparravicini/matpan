@@ -59,11 +59,6 @@ blacklist = set(['CAPU', 'PESA', 'PSUR', 'POLL'])
 
 print("using dates [%s - %s]" % range_dates)
 
-create_plot = False
-
-if create_plot:
-    import matplotlib.pyplot as plt
-
 all_data = load_all_data(blacklist)
 
 class ReturnsManager:
@@ -162,17 +157,5 @@ for symbol, data in all_data.items():
             # print(f'ma: [{short_window}, {long_window}], value: ${value:.2f}, total returns: {total_return:.2f}%')
 
     print(f"\r{symbol}", returns.max_for(symbol))
-
-    if create_plot:
-        fig = plot(range_dates, zoom_dates, symbol, data,
-                   (
-                        (price, 'Price'),
-                        (ma_short, 'EMA %d' % short_window),
-                        (ma_long, 'EMA %d' % long_window),
-                   ), signals)
-
-        plt.savefig('charts/' + symbol + '.png')
-        # plt.show()
-        plt.close(fig)
 
 print(returns)
