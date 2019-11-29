@@ -1,5 +1,4 @@
 import pandas as pd
-import matplotlib.dates as mdates
 
 from pandas_datareader import data
 import numpy as np
