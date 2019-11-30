@@ -97,6 +97,8 @@ else:
     returns = ReturnsManager(all_data.keys(), days_range, min_days)
 
 
+from timeit import default_timer as timer
+
 print()
 for symbol, data in all_data.items():
     if last_symbol is not None:
@@ -119,16 +121,23 @@ for symbol, data in all_data.items():
         progress = (i / (days_range[1] - days_range[0])) * 100
         print(f"\r{symbol} {progress:2.0f}%", end='', flush=True)
 
+        run_times = {
+            'signal': 0,
+            'returns': 0,
+        }
         for j in range(i + min_days, days_range[1] + 1):
             short_window = i
             long_window = j
             ma_short = signals['ema_%d' % short_window]
             ma_long = signals['ema_%d' % long_window]
 
-            signals['signal'] = 0
-            signals['signal'][short_window:] = np.where(
-                                                    ma_short[short_window:] > ma_long[short_window:], 1, 0)
+            start = timer()
+            signals['signal'] = np.where(ma_short > ma_long, 1, 0)
+            signals.loc[:short_window, 'signal'] = 0
+
             signals['position'] = signals['signal'].diff()
+            end = timer()
+            run_times['signal'] += end - start
 
             # should you buy/sell today?
             # action = signals['position'][range_dates[1]]
@@ -137,28 +146,31 @@ for symbol, data in all_data.items():
             #     print("\tsignal:", msg)
 
 
+            start = timer()
             initial_capital = 1000000
             shares = 1000
+            print(signals['signal'].count)
             positions['position'] = shares * signals['signal']
             portfolio = positions.multiply(price, axis=0)
 
-            pos_diff = portfolio.diff();
+            pos_diff = portfolio.diff()
 
             portfolio['holdings'] = (positions.multiply(price, axis=0)).sum(axis=1)
             portfolio['cash'] = initial_capital - (pos_diff.multiply(price, axis=0)).sum(axis=1).cumsum()
             portfolio['total'] = portfolio['cash'] + portfolio['holdings']
             portfolio['returns'] = portfolio['total'].pct_change()
 
-            del portfolio['position']
-            
             # print(portfolio.tail())
             value = portfolio['total'].tail(1).values[0]
             total_return = ((value / initial_capital) - 1) * 100
             # print(f'value: ${value:.2f}, total returns: {total_return:.2f}%')
+            end = timer()
+            run_times['returns'] += end - start
 
             returns.set_return(symbol, short_window, long_window, total_return)
             # print(f'ma: [{short_window}, {long_window}], value: ${value:.2f}, total returns: {total_return:.2f}%')
 
+        # print(f' times: {run_times} (in secs)')
     print(f"\r{symbol}", returns.max_for(symbol))
     state = {
         'all_data': all_data,
