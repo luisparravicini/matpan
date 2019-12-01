@@ -149,7 +149,6 @@ for symbol, data in all_data.items():
             start = timer()
             initial_capital = 1000000
             shares = 1000
-            print(signals['signal'].count)
             positions['position'] = shares * signals['signal']
             portfolio = positions.multiply(price, axis=0)
 
