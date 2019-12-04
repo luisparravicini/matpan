@@ -168,7 +168,7 @@ class StrategyFinderMA:
         data = self.ckp_manager.load(StrategyFinderMA.CKP_FNAME)
         if data is None:
             self.last_symbol = None
-            self.days_range = (5, 20)#300)
+            self.days_range = (5, 300)
             self.min_days = 4
             self.returns = ReturnsManager(symbols, self.days_range, self.min_days)
         else:
