@@ -15,23 +15,34 @@ import pickle
 
 
 class CheckpointManager:
+    BASE_FNAME = 'base'
+
     def __init__(self, data_path):
         self.data_path = data_path
 
-    def load(self):
-        if not self.has_checkpoint():
+    def load_base(self):
+        return self.load(CheckpointManager.BASE_FNAME)
+
+    def save_base(self, data):
+        return self.save(CheckpointManager.BASE_FNAME, data)
+
+    def load(self, fname):
+        path = self._get_fname_for(fname)
+        if not os.path.exists(path):
             return None
 
-        with open(self.data_path, 'rb') as file:
+        with open(path, 'rb') as file:
             return pickle.load(file)
 
-    def has_checkpoint(self):
-        return os.path.exists(self.data_path)
+    def save(self, fname, data):
+        if not os.path.exists(self.data_path):
+            os.mkdir(self.data_path)
 
-    def save(self, data):
-        with open(self.data_path, 'wb') as file:
+        with open(self._get_fname_for(fname), 'wb') as file:
             pickle.dump(data, file)
 
+    def _get_fname_for(self, fname):
+        return os.path.join(self.data_path, fname + '.pickle')
 
 
 class ReturnsManager:
@@ -69,20 +80,47 @@ class ReturnsManager:
         return values
 
 
+class StrategyFinderMA:
+    CKP_FNAME = 'all_ma_returns'
+
+    def __init__(self, ckp_manager):
+        self.ckp_manager = ckp_manager
+
+    def load(self, symbols):
+        data = self.ckp_manager.load(StrategyFinderMA.CKP_FNAME)
+        if data is None:
+            self.last_symbol = None
+            self.days_range = (5, 20)#300)
+            self.min_days = 4
+            self.returns = ReturnsManager(symbols, self.days_range, self.min_days)
+        else:
+            self.returns = data['returns']
+            self.last_symbol = data['last_symbol']
+            self.days_range = data['days_range']
+            self.min_days = data['min_days']
+
+    def save(self):
+        data = {
+            'last_symbol': self.last_symbol,
+            'returns': self.returns,
+            'days_range': self.days_range,
+            'min_days': self.min_days,
+        }
+        self.ckp_manager.save(
+            StrategyFinderMA.CKP_FNAME,
+            data)
+
 
 conf = Configuration('..')
 
-ckp_manager = CheckpointManager('checkpoint.pickle')
+ckp_manager = CheckpointManager('checkpoint')
+strategy = StrategyFinderMA(ckp_manager)
 
-if ckp_manager.has_checkpoint():
-    print('loading last checkpoint')
-    data = ckp_manager.load()
+data = ckp_manager.load_base()
+if data is not None:
+    print('last checkpoint loaded')
     symbols = data['symbols']
     all_data = data['all_data']
-    last_symbol = data['last_symbol']
-    days_range = data['days_range']
-    min_days = data['min_days']
-    returns = data['returns']
 else:
     prices_manager = Prices('prices', conf['se'])
     today = date.today()
@@ -91,15 +129,20 @@ else:
     symbols = conf.symbols()
     all_data = load_all_data(prices_manager, blacklist, symbols, range_dates)
     print("using dates [%s - %s]" % range_dates)
-    last_symbol = None
-    days_range = (5, 300)
-    min_days = 4
-    returns = ReturnsManager(all_data.keys(), days_range, min_days)
+
+    state = {
+        'all_data': all_data,
+        'symbols': symbols,
+    }
+    ckp_manager.save_base(state)
+
+strategy.load(all_data.keys())
 
 
 from timeit import default_timer as timer
 
 print()
+last_symbol = strategy.last_symbol
 for symbol, data in all_data.items():
     if last_symbol is not None:
         if last_symbol == symbol:
@@ -109,7 +152,7 @@ for symbol, data in all_data.items():
     price = data['Adj Close']
 
     signals = pd.DataFrame(index=price.index)
-    for i in range(days_range[0], days_range[1] + 1):
+    for i in range(strategy.days_range[0], strategy.days_range[1] + 1):
         col = 'sma_%d' % i
         signals[col] = price.rolling(i).mean()
         col = 'ema_%d' % i
@@ -117,15 +160,15 @@ for symbol, data in all_data.items():
 
     signals['price'] = price
     positions = pd.DataFrame(index=signals.index).fillna(0)
-    for i in range(days_range[0], days_range[1] + 1):
-        progress = (i / (days_range[1] - days_range[0])) * 100
+    for i in range(strategy.days_range[0], strategy.days_range[1] + 1):
+        progress = (i / (strategy.days_range[1] - strategy.days_range[0])) * 100
         print(f"\r{symbol} {progress:2.0f}%", end='', flush=True)
 
         run_times = {
             'signal': 0,
             'returns': 0,
         }
-        for j in range(i + min_days, days_range[1] + 1):
+        for j in range(i + strategy.min_days, strategy.days_range[1] + 1):
             short_window = i
             long_window = j
             ma_short = signals['ema_%d' % short_window]
@@ -166,19 +209,12 @@ for symbol, data in all_data.items():
             end = timer()
             run_times['returns'] += end - start
 
-            returns.set_return(symbol, short_window, long_window, total_return)
+            strategy.returns.set_return(symbol, short_window, long_window, total_return)
             # print(f'ma: [{short_window}, {long_window}], value: ${value:.2f}, total returns: {total_return:.2f}%')
 
         # print(f' times: {run_times} (in secs)')
-    print(f"\r{symbol}", returns.max_for(symbol))
-    state = {
-        'all_data': all_data,
-        'last_symbol': symbol,
-        'symbols': symbols,
-        'days_range': days_range,
-        'min_days': min_days,
-        'returns': returns,
-    }
-    ckp_manager.save(state)
+    print(f"\r{symbol}", strategy.returns.max_for(symbol))
+    strategy.last_symbol = symbol
+    strategy.save()
 
-print(returns)
+print(strategy.returns)
