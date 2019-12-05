@@ -8,6 +8,7 @@ def load_data(prices_manager, start_date, end_date, symbol):
     return data
     # return data.loc[start_date:end_date]
 
+
 def load_all_data(prices_manager, blacklist, symbols, range_dates):
     print('loading quotes')
 
@@ -17,7 +18,11 @@ def load_all_data(prices_manager, blacklist, symbols, range_dates):
             print(symbol, '(blacklisted)')
             continue
 
-        data = load_data(prices_manager, range_dates[0], range_dates[1], symbol)
+        data = load_data(
+            prices_manager,
+            range_dates[0],
+            range_dates[1],
+            symbol)
         close = data['Adj Close']
 
         if close.isnull().all():

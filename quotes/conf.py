@@ -1,6 +1,7 @@
 import yaml
 import os
 
+
 class Configuration:
     def __init__(self, path):
         self.path = os.path.join(path, 'conf.yaml')

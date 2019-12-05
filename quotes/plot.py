@@ -1,7 +1,7 @@
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import matplotlib as mpl
-#import seaborn as sns
+# import seaborn as sns
 from pandas.plotting import register_matplotlib_converters
 from mpl_finance import candlestick_ohlc
 
@@ -19,7 +19,8 @@ def plot_signal(ax, index, data, marker, color):
     )
 
 
-def plot_data(ax, start_date, end_date, quotes, series, signals, show_candlestick):
+def plot_data(ax, start_date, end_date, quotes,
+              series, signals, show_candlestick):
     if show_candlestick:
         candlestick_ohlc(ax, quotes, width=0.5, colorup='g', colordown='r')
 

@@ -29,7 +29,7 @@ print("using dates [%s - %s]" % range_dates)
 all_data = load_all_data(prices_manager, blacklist, symbols, range_dates)
 
 print()
-days_range = (5, 90)#200)
+days_range = (5, 90)  # 200)
 min_days = 4
 for symbol, data in all_data.items():
     price = data['Adj Close']
@@ -50,7 +50,8 @@ for symbol, data in all_data.items():
 
     signals['signal'] = 0
     signals['signal'][short_window:] = np.where(
-                                            ma_short[short_window:] > ma_long[short_window:], 1, 0)
+        ma_short[short_window:] > ma_long[short_window:],
+        1, 0)
     signals['position'] = signals['signal'].diff()
 
     fig = plot(range_dates, zoom_dates, symbol, data,

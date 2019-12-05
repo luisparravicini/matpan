@@ -2,6 +2,7 @@ import requests
 import os
 from cache import Cache
 
+
 class Downloader:
 
     def __init__(self, cache_dir):
