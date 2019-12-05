@@ -115,14 +115,14 @@ def _update_prices():
             cols = [float(x.replace(',', '')) for x in datum[1:]]
             prices_data.append(cols)
 
-        prices = pd.DataFrame(data=prices_data,
-                              index=dates,
-                              columns=[
-                                'Open', 'Max', 'Min',
-                                'Close', 'Adj Close',
-                                'Volumen monto',
-                                'Volumen nominal'
-                              ])
+        prices = pd.DataFrame(
+            data=prices_data,
+            index=dates,
+            columns=[
+                'Open', 'Max', 'Min',
+                'Close', 'Adj Close',
+                'Volumen monto',
+                'Volumen nominal'])
         prices.index.name = 'Date'
 
         if cur_prices is None:
