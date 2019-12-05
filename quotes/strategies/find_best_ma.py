@@ -17,7 +17,9 @@ class ReturnsManager:
                 self.columns[col] = index
                 self.columns_indices.append(col)
                 index += 1
-        self.data = np.empty((len(symbols), len(self.columns)), dtype=np.float16)
+        self.data = np.empty(
+            (len(symbols), len(self.columns)),
+            dtype=np.float16)
         self.data.fill(np.nan)
 
     def set_return(self, symbol, days_a, days_b, value):
@@ -45,7 +47,6 @@ class StrategyFindBestMA:
         self.ckp_manager = ckp_manager
 
     def run(self):
-        print()
         last_symbol = self.last_symbol
         for symbol, data in self.all_data.items():
             if last_symbol is not None:
@@ -54,79 +55,80 @@ class StrategyFindBestMA:
                 continue
 
             price = data['Adj Close']
+            self._process_ma(symbol, price)
 
-            signals = pd.DataFrame(index=price.index)
-            for i in range(self.days_range[0], self.days_range[1] + 1):
-                col = 'sma_%d' % i
-                signals[col] = price.rolling(i).mean()
-                col = 'ema_%d' % i
-                signals[col] = price.ewm(span=i, adjust=False).mean()
+    def _process_ma(self, symbol, price):
+        signals = pd.DataFrame(index=price.index)
+        for i in range(self.days_range[0], self.days_range[1] + 1):
+            col = 'sma_%d' % i
+            signals[col] = price.rolling(i).mean()
+            col = 'ema_%d' % i
+            signals[col] = price.ewm(span=i, adjust=False).mean()
 
-            signals['price'] = price
-            positions = pd.DataFrame(index=signals.index).fillna(0)
-            for i in range(self.days_range[0], self.days_range[1] + 1):
-                progress = (i / (self.days_range[1] - self.days_range[0])) * 100
-                print(f"\r{symbol} {progress:2.0f}%", end='', flush=True)
+        signals['price'] = price
+        positions = pd.DataFrame(index=signals.index).fillna(0)
+        for i in range(self.days_range[0], self.days_range[1] + 1):
+            progress = (i / (self.days_range[1] - self.days_range[0])) * 100
+            print(f"\r{symbol} {progress:2.0f}%", end='', flush=True)
 
-                run_times = {
-                    'signal': 0,
-                    'returns': 0,
-                }
-                for j in range(i + self.min_days, self.days_range[1] + 1):
-                    short_window = i
-                    long_window = j
-                    ma_short = signals['ema_%d' % short_window]
-                    ma_long = signals['ema_%d' % long_window]
+            run_times = {
+                'signal': 0,
+                'returns': 0,
+            }
+            for j in range(i + self.min_days, self.days_range[1] + 1):
+                short_window = i
+                long_window = j
+                ma_short = signals['ema_%d' % short_window]
+                ma_long = signals['ema_%d' % long_window]
 
-                    start = timer()
-                    signals['signal'] = np.where(ma_short > ma_long, 1, 0)
-                    signals.loc[:short_window, 'signal'] = 0
+                start = timer()
+                signals['signal'] = np.where(ma_short > ma_long, 1, 0)
+                signals.loc[:short_window, 'signal'] = 0
 
-                    signals['position'] = signals['signal'].diff()
-                    end = timer()
-                    run_times['signal'] += end - start
+                signals['position'] = signals['signal'].diff()
+                end = timer()
+                run_times['signal'] += end - start
 
-                    # should you buy/sell today?
-                    # action = signals['position'][range_dates[1]]
-                    # if action != 0:
-                    #     msg = "sell" if action < 0 else "buy"
-                    #     print("\tsignal:", msg)
+                # should you buy/sell today?
+                # action = signals['position'][range_dates[1]]
+                # if action != 0:
+                #     msg = "sell" if action < 0 else "buy"
+                #     print("\tsignal:", msg)
 
+                start = timer()
+                initial_capital = 1000000
+                shares = 1000
+                positions['position'] = shares * signals['signal']
+                portfolio = positions.multiply(price, axis=0)
 
-                    start = timer()
-                    initial_capital = 1000000
-                    shares = 1000
-                    positions['position'] = shares * signals['signal']
-                    portfolio = positions.multiply(price, axis=0)
+                pos_diff = portfolio.diff()
 
-                    pos_diff = portfolio.diff()
+                portfolio['holdings'] = (positions.multiply(price, axis=0)).sum(axis=1)
+                portfolio['cash'] = initial_capital - (pos_diff.multiply(price, axis=0)).sum(axis=1).cumsum()
+                portfolio['total'] = portfolio['cash'] + portfolio['holdings']
+                portfolio['returns'] = portfolio['total'].pct_change()
 
-                    portfolio['holdings'] = (positions.multiply(price, axis=0)).sum(axis=1)
-                    portfolio['cash'] = initial_capital - (pos_diff.multiply(price, axis=0)).sum(axis=1).cumsum()
-                    portfolio['total'] = portfolio['cash'] + portfolio['holdings']
-                    portfolio['returns'] = portfolio['total'].pct_change()
+                # print(portfolio.tail())
+                value = portfolio['total'].tail(1).values[0]
+                total_return = ((value / initial_capital) - 1) * 100
+                # print(f'value: ${value:.2f}, total returns: {total_return:.2f}%')
+                end = timer()
+                run_times['returns'] += end - start
 
-                    # print(portfolio.tail())
-                    value = portfolio['total'].tail(1).values[0]
-                    total_return = ((value / initial_capital) - 1) * 100
-                    # print(f'value: ${value:.2f}, total returns: {total_return:.2f}%')
-                    end = timer()
-                    run_times['returns'] += end - start
+                self.returns.set_return(symbol, short_window, long_window, total_return)
+                # print(f'ma: [{short_window}, {long_window}], value: ${value:.2f}, total returns: {total_return:.2f}%')
 
-                    self.returns.set_return(symbol, short_window, long_window, total_return)
-                    # print(f'ma: [{short_window}, {long_window}], value: ${value:.2f}, total returns: {total_return:.2f}%')
-
-                # print(f' times: {run_times} (in secs)')
-            print(f"\r{symbol}", self.returns.max_for(symbol))
-            self.last_symbol = symbol
-            self.save()
+            # print(f' times: {run_times} (in secs)')
+        print(f"\r{symbol}", self.returns.max_for(symbol))
+        self.last_symbol = symbol
+        self.save()
 
     def load(self, symbols, all_data):
         self.all_data = all_data
         data = self.ckp_manager.load(StrategyFindBestMA.CKP_FNAME)
         if data is None:
             self.last_symbol = None
-            self.days_range = (5, 300)
+            self.days_range = (5, 20)#)300)
             self.min_days = 4
             self.returns = ReturnsManager(symbols, self.days_range, self.min_days)
         else:
