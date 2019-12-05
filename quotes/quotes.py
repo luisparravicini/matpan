@@ -120,8 +120,8 @@ def _update_prices():
                               columns=[
                                 'Open', 'Max', 'Min',
                                 'Close', 'Adj Close',
-                                'Volume',
-                                'Nominal volume'
+                                'Volumen monto',
+                                'Volumen nominal'
                               ])
         prices.index.name = 'Date'
 
