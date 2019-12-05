@@ -1,6 +1,7 @@
 import os
 import pandas as pd
 
+
 class Prices:
     EXT = '.csv'
 
