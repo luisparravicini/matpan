@@ -60,8 +60,8 @@ class StrategyFindBestMA:
     def _process_ma(self, symbol, price):
         signals = pd.DataFrame(index=price.index)
         for i in range(self.days_range[0], self.days_range[1] + 1):
-            col = 'sma_%d' % i
-            signals[col] = price.rolling(i).mean()
+            # col = 'sma_%d' % i
+            # signals[col] = price.rolling(i).mean()
             col = 'ema_%d' % i
             signals[col] = price.ewm(span=i, adjust=False).mean()
 
