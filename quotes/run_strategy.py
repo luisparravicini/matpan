@@ -12,13 +12,14 @@ from loader import load_all_data
 
 import os
 from checkpoint_manager import CheckpointManager
-from strategies import StrategyFindBestMA
+from strategies import StrategyFindBestMA, StrategyRandom01
 
 
 conf = Configuration('..')
 
 ckp_manager = CheckpointManager('checkpoint')
-strategy = StrategyFindBestMA(ckp_manager)
+# strategy = StrategyFindBestMA(ckp_manager)
+strategy = StrategyRandom01(ckp_manager)
 
 data = ckp_manager.load_base()
 if data is not None:

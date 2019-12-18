@@ -1,6 +1,7 @@
 from timeit import default_timer as timer
 import pandas as pd
 import numpy as np
+from .returns_finder import ReturnsFinder
 
 
 class ReturnsManager:
@@ -66,7 +67,7 @@ class StrategyFindBestMA:
             signals[col] = price.ewm(span=i, adjust=False).mean()
 
         signals['price'] = price
-        positions = pd.DataFrame(index=signals.index).fillna(0)
+        returns = ReturnsFinder(signals)
         for i in range(self.days_range[0], self.days_range[1] + 1):
             progress = (i / (self.days_range[1] - self.days_range[0])) * 100
             print(f"\r{symbol} {progress:2.0f}%", end='', flush=True)
@@ -84,8 +85,6 @@ class StrategyFindBestMA:
                 start = timer()
                 signals['signal'] = np.where(ma_short > ma_long, 1, 0)
                 signals.loc[:short_window, 'signal'] = 0
-
-                signals['position'] = signals['signal'].diff()
                 end = timer()
                 run_times['signal'] += end - start
 
@@ -96,22 +95,7 @@ class StrategyFindBestMA:
                 #     print("\tsignal:", msg)
 
                 start = timer()
-                initial_capital = 1000000
-                shares = 1000
-                positions['position'] = shares * signals['signal']
-                portfolio = positions.multiply(price, axis=0)
-
-                pos_diff = portfolio.diff()
-
-                portfolio['holdings'] = (positions.multiply(price, axis=0)).sum(axis=1)
-                portfolio['cash'] = initial_capital - (pos_diff.multiply(price, axis=0)).sum(axis=1).cumsum()
-                portfolio['total'] = portfolio['cash'] + portfolio['holdings']
-                portfolio['returns'] = portfolio['total'].pct_change()
-
-                # print(portfolio.tail())
-                value = portfolio['total'].tail(1).values[0]
-                total_return = ((value / initial_capital) - 1) * 100
-                # print(f'value: ${value:.2f}, total returns: {total_return:.2f}%')
+                value, total_return = returns.update(signals)
                 end = timer()
                 run_times['returns'] += end - start
 
