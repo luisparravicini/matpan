@@ -58,8 +58,8 @@ def _update_prices():
     global downloader
     global prices_manager
 
-    symbols = conf['symbols'].copy()
-    # shuffle(symbols)
+    symbols = conf.index() + conf['symbols']
+    shuffle(symbols)
     for datum in symbols:
         id, symbol, _ = datum
 

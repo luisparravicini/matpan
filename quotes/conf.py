@@ -16,6 +16,9 @@ class Configuration:
     def __contains__(self, item):
         return item in self.conf
 
+    def index(self):
+        return self.conf['index']
+
     def symbols(self):
         return [x[1] for x in self['symbols']]
 

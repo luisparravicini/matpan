@@ -25,6 +25,10 @@ If you intend to use that script, you need to provide a yaml file like the shown
 ```yaml
 id_re: REGEXP_TO_EXTRACT_SYMBOL_ID
 se: STOCK_EXCHANGE_NAME
+index:
+  - - INDEX_ID
+    - INDEX_SYMBOL
+    - INDEX_DESC
 price_params:
   dates: DATE_RANGE_REQUEST_ARG
   extras:
