@@ -42,10 +42,6 @@ def _setup_symbols():
     _save_conf()
 
 
-def to_date(s):
-    return datetime.strptime(s, '%Y-%m-%d').date()
-
-
 def to_req_str(d):
     return d.strftime('%d/%m/%Y')
 
@@ -74,10 +70,7 @@ def _update_prices():
 
         print(symbol, end='\t')
 
-        if symbol != conf.index_symbol():
-            continue
-
-        start_date = to_date('2017-01-01')
+        start_date = conf.start_date()
         end_date = date.today()
 
         cur_prices = prices_manager.load(symbol)

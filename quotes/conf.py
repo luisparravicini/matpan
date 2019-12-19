@@ -16,6 +16,9 @@ class Configuration:
     def __contains__(self, item):
         return item in self.conf
 
+    def start_date(self):
+        return self.conf['start_date']
+
     def index(self):
         return self.conf['index']
 
