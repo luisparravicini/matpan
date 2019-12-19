@@ -74,8 +74,7 @@ def plot(range_dates, zoom_dates, symbol, data, series, signals):
         quotes,
         series,
         signals,
-        False
-    )
+        False)
 
     quotes = quotes_range(zoom_dates, data)
     plot_data(
@@ -85,7 +84,6 @@ def plot(range_dates, zoom_dates, symbol, data, series, signals):
         quotes,
         series,
         signals,
-        True
-    )
+        True)
 
     return fig

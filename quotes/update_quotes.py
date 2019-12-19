@@ -8,6 +8,7 @@ import os
 import pandas as pd
 from prices import Prices
 from conf import Configuration
+import json
 
 conf = None
 downloader = None
@@ -49,8 +50,16 @@ def to_req_str(d):
     return d.strftime('%d/%m/%Y')
 
 
+def to_index_req_str(d):
+    return d.strftime('%d-%m-%Y')
+
+
 def from_req_str(s):
     return datetime.strptime(s, '%m/%d/%Y').date()
+
+
+def from_index_req_str(s):
+    return datetime.strptime(s, '%d-%m-%Y').date()
 
 
 def _update_prices():
@@ -64,6 +73,9 @@ def _update_prices():
         id, symbol, _ = datum
 
         print(symbol, end='\t')
+
+        if symbol != conf.index_symbol():
+            continue
 
         start_date = to_date('2017-01-01')
         end_date = date.today()
@@ -80,40 +92,67 @@ def _update_prices():
             print()
             continue
 
-        date_range = " - ".join([
-            to_req_str(start_date),
-            to_req_str(end_date),
-        ])
-        req_data = dict()
-        params = conf['price_params']
-        req_data[params['dates']] = date_range
-        req_data[params['id']] = id
-        req_data = {**req_data, **params['extras']}
-
         print(f'{start_date.isoformat()} - {end_date.isoformat()}')
 
-        price_url = conf['price_url']
-        data = downloader.post(price_url, req_data)
-
-        dates = list()
-        prices_data = list()
-        soup = BeautifulSoup(data, 'html.parser')
-        for row in soup.findAll('tr'):
-            if len(row.findAll('th')) == 8:
-                continue
-
-            cols = row.findAll('td')
-            if len(cols) != 8:
-                print('Unpexected number of columns')
+        if symbol == conf.index_symbol():
+            price_url = conf['index_url']
+            price_url = os.path.join(
+                            price_url,
+                            to_index_req_str(start_date),
+                            to_index_req_str(end_date))
+            print(price_url)
+            data = json.loads(downloader.get(price_url))
+            if len(data) < 2:
+                print('Unpexected number of rows')
                 os.sys.exit(1)
+            cols = data[0]
+            expected_cols = ["Fecha", "Apertura", "Ultimo",
+                             "Var %", "Max.", "Min."]
+            if cols != expected_cols:
+                print('Unpexected columns')
+                os.sys.exit(1)
+            dates = list()
+            prices_data = list()
+            for row in data[1:]:
+                row_date = from_index_req_str(row[0])
+                dates.append(row_date)
 
-            datum = [x.text for x in cols]
+                row_data = [float(x.replace('.', '').replace(',', '.')) for x in row[1:]]
+                datum = [row_data[0], row_data[3], row_data[4], None, row_data[1], None, None]
+                prices_data.append(datum)
+                print(datum)
+        else:
+            date_range = " - ".join([
+                to_req_str(start_date),
+                to_req_str(end_date),
+            ])
+            req_data = dict()
+            params = conf['price_params']
+            req_data[params['dates']] = date_range
+            req_data[params['id']] = id
+            req_data = {**req_data, **params['extras']}
 
-            row_date = from_req_str(datum[0])
-            dates.append(row_date)
+            price_url = conf['price_url']
+            data = downloader.post(price_url, req_data)
+            dates = list()
+            prices_data = list()
+            soup = BeautifulSoup(data, 'html.parser')
+            for row in soup.findAll('tr'):
+                if len(row.findAll('th')) == 8:
+                    continue
 
-            cols = [float(x.replace(',', '')) for x in datum[1:]]
-            prices_data.append(cols)
+                cols = row.findAll('td')
+                if len(cols) != 8:
+                    print('Unpexected number of columns')
+                    os.sys.exit(1)
+
+                datum = [x.text for x in cols]
+
+                row_date = from_req_str(datum[0])
+                dates.append(row_date)
+
+                cols = [float(x.replace(',', '')) for x in datum[1:]]
+                prices_data.append(cols)
 
         prices = pd.DataFrame(
             data=prices_data,

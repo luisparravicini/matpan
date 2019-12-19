@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 from conf import Configuration
 from prices import Prices
 from datetime import date, timedelta
-from loader import load_all_data
+from loader import load_all_data, load_index_data
 
 
 conf = Configuration('..')
@@ -27,6 +27,10 @@ blacklist = set(['CAPU', 'PESA', 'PSUR', 'POLL'])
 print("using dates [%s - %s]" % range_dates)
 
 all_data = load_all_data(prices_manager, blacklist, symbols, range_dates)
+index_symbol = conf.index_symbol()
+index_data = load_index_data(prices_manager, index_symbol, range_dates)
+index_close = index_data[index_symbol]['Adj Close']
+print(index_close)
 
 print()
 days_range = (5, 90)  # 200)
@@ -59,7 +63,9 @@ for symbol, data in all_data.items():
                     (price, 'Price'),
                     (ma_short, 'EMA %d' % short_window),
                     (ma_long, 'EMA %d' % long_window),
-               ), signals)
+                    (index_close, index_symbol),
+               ),
+               signals)
 
     plt.savefig('charts/' + symbol + '.png')
     # plt.show()

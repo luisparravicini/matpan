@@ -9,6 +9,20 @@ def load_data(prices_manager, start_date, end_date, symbol):
     # return data.loc[start_date:end_date]
 
 
+def load_index_data(prices_manager, index_symbol, range_dates):
+    print('loading index')
+
+    data = dict()
+    data[index_symbol] = load_data(
+        prices_manager,
+        range_dates[0],
+        range_dates[1],
+        index_symbol)
+    print(index_symbol, end="\r")
+
+    return data
+
+
 def load_all_data(prices_manager, blacklist, symbols, range_dates):
     print('loading quotes')
 

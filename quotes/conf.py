@@ -19,6 +19,9 @@ class Configuration:
     def index(self):
         return self.conf['index']
 
+    def index_symbol(self):
+        return self.index()[0][1]
+
     def symbols(self):
         return [x[1] for x in self['symbols']]
 

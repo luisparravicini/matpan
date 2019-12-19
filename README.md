@@ -29,6 +29,7 @@ index:
   - - INDEX_ID
     - INDEX_SYMBOL
     - INDEX_DESC
+index_url: URL_TO_FETCH_HISTORIC_INDEX_DATA
 price_params:
   dates: DATE_RANGE_REQUEST_ARG
   extras:
