@@ -13,7 +13,7 @@ class Downloader:
         if data is None:
             response = self._do_get(url)
             data = response.text
-            self.cache.save(url, Cache.GET_METHOD, data)
+            self.cache.save(Cache.GET_METHOD, url, data)
         return data
 
     def post(self, url, req_data):
