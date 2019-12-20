@@ -19,10 +19,15 @@ def plot_signal(ax, index, data, marker, color):
     )
 
 
-def plot_data(ax, start_date, end_date, quotes,
+def plot_data(ax, start_date, end_date, candlestick_quotes,
               series, signals, show_candlestick):
     if show_candlestick:
-        candlestick_ohlc(ax, quotes, width=0.5, colorup='g', colordown='r')
+        candlestick_ohlc(
+            ax,
+            candlestick_quotes,
+            width=0.5,
+            colorup='g',
+            colordown='r')
 
     for s in series:
         data = s[0]
@@ -55,9 +60,9 @@ def quotes_range(date_range, quotes):
     return zip(
         mdates.date2num(subset.index.to_pydatetime()),
         subset['Open'],
-        subset['Adj Close'],
         subset['Max'],
-        subset['Min']
+        subset['Min'],
+        subset['Adj Close'],
     )
 
 
@@ -66,22 +71,21 @@ def plot(range_dates, zoom_dates, symbol, data, series, signals):
     fig, ax = plt.subplots(2, 1, figsize=(15, 9))
     plt.suptitle(symbol)
 
-    quotes = quotes_range(range_dates, data)
     plot_data(
         ax[0],
         range_dates[0],
         range_dates[1],
-        quotes,
+        None,
         series,
         signals,
         False)
 
-    quotes = quotes_range(zoom_dates, data)
+    candlestick_data = quotes_range(zoom_dates, data)
     plot_data(
         ax[1],
         zoom_dates[0],
         zoom_dates[1],
-        quotes,
+        candlestick_data,
         series,
         signals,
         True)
