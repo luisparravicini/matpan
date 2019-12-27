@@ -25,7 +25,7 @@ class Downloader:
         return data
 
     def _do_get(self, url):
-        print(f'fetching {url}')
+        # print(f'fetching {url}')
         response = requests.get(url)
         self._check_is_ok(response)
         return response

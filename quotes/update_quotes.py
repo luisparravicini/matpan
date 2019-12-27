@@ -93,7 +93,6 @@ def _update_prices():
                             price_url,
                             to_index_req_str(start_date),
                             to_index_req_str(end_date))
-            print(price_url)
             data = json.loads(downloader.get(price_url))
             if len(data) < 2:
                 print('Unpexected number of rows')
@@ -113,7 +112,6 @@ def _update_prices():
                 row_data = [float(x.replace('.', '').replace(',', '.')) for x in row[1:]]
                 datum = [row_data[0], row_data[3], row_data[4], None, row_data[1], None, None]
                 prices_data.append(datum)
-                print(datum)
         else:
             date_range = " - ".join([
                 to_req_str(start_date),
