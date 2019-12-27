@@ -33,7 +33,7 @@ index_close = index_data[index_symbol]['Adj Close']
 # TODO: plot index
 
 print()
-days_range = (5, 90)  # 200)
+days_range = (20, 90)  # 200)
 min_days = 4
 for symbol, data in all_data.items():
     price = data['Adj Close']
