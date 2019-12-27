@@ -33,13 +33,25 @@ else:
     blacklist = set(['CAPU', 'PESA', 'PSUR', 'POLL'])
     symbols = conf.symbols()
     all_data = load_all_data(prices_manager, blacklist, symbols, range_dates)
+
+    print('calculating returns')
+    for data in all_data.values():
+        data['Daily Return'] = data['Adj Close']
+        returns = data.apply(
+            lambda x:
+            np.log(x) - np.log(x.shift())
+            if x.name == 'Daily Return' else x)
+        data['Daily Return'] = returns['Daily Return']
+
     print("using dates [%s - %s]" % range_dates)
 
     state = {
         'all_data': all_data,
         'symbols': symbols,
     }
+
     ckp_manager.save_base(state)
+
 
 strategy.load(all_data.keys(), all_data)
 strategy.run()
