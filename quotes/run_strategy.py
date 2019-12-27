@@ -36,12 +36,11 @@ else:
 
     print('calculating returns')
     for data in all_data.values():
-        data['Daily Return'] = data['Adj Close']
-        returns = data.apply(
+        # TODO there must be a better way to do this
+        returns = pd.DataFrame(data['Adj Close']).apply(
             lambda x:
-            np.log(x) - np.log(x.shift())
-            if x.name == 'Daily Return' else x)
-        data['Daily Return'] = returns['Daily Return']
+            np.log(x) - np.log(x.shift()))
+        data['Daily Return'] = returns
 
     print("using dates [%s - %s]" % range_dates)
 
