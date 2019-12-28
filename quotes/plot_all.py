@@ -1,16 +1,10 @@
 import pandas as pd
-import matplotlib.dates as mdates
-
-from pandas_datareader import data
+from datetime import timedelta
+from setup import setup
 import numpy as np
-
 from plot import plot
 import matplotlib.pyplot as plt
-
-from conf import Configuration
-from prices import Prices
-from datetime import date, timedelta
-from loader import load_all_data, load_index_data
+from loader import load_index_data
 import argparse
 
 
@@ -18,19 +12,12 @@ parser = argparse.ArgumentParser(description='Plot quotes')
 parser.add_argument('--symbol', help='plot only SYMBOL')
 args = parser.parse_args()
 
-conf = Configuration('..')
-prices_manager = Prices('prices', conf['se'])
-today = date.today()
-range_dates = ('2017-01-01', today.isoformat())
+
+today, range_dates, conf, prices_manager, all_data, ckp_manager = setup()
 zoom_dates = (
     (today - timedelta(days=40)).isoformat(),
     today)
 
-blacklist = set(['CAPU', 'PESA', 'PSUR', 'POLL'])
-
-print("using dates [%s - %s]" % range_dates)
-
-all_data = load_all_data(prices_manager, blacklist, conf.symbols(), range_dates)
 index_symbol = conf.index_symbol()
 index_data = load_index_data(prices_manager, index_symbol, range_dates)
 index_close = index_data[index_symbol]['Adj Close']

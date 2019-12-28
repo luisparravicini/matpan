@@ -72,6 +72,7 @@ class StrategyRandom01:
                 d = 0
 
         value, total_return = returns.update(signals)
+        print(f'${value} / {total_return}%')
 
         # self.returns.set_return(symbol, short_window, long_window, total_return)
         # print(f'ma: [{short_window}, {long_window}], value: ${value:.2f}, total returns: {total_return:.2f}%')
