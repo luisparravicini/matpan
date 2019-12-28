@@ -11,7 +11,12 @@ from conf import Configuration
 from prices import Prices
 from datetime import date, timedelta
 from loader import load_all_data, load_index_data
+import argparse
 
+
+parser = argparse.ArgumentParser(description='Plot quotes')
+parser.add_argument('--symbol', help='plot only SYMBOL')
+args = parser.parse_args()
 
 conf = Configuration('..')
 prices_manager = Prices('prices', conf['se'])
@@ -20,13 +25,12 @@ range_dates = ('2017-01-01', today.isoformat())
 zoom_dates = (
     (today - timedelta(days=40)).isoformat(),
     today)
-symbols = conf.symbols()
 
 blacklist = set(['CAPU', 'PESA', 'PSUR', 'POLL'])
 
 print("using dates [%s - %s]" % range_dates)
 
-all_data = load_all_data(prices_manager, blacklist, symbols, range_dates)
+all_data = load_all_data(prices_manager, blacklist, conf.symbols(), range_dates)
 index_symbol = conf.index_symbol()
 index_data = load_index_data(prices_manager, index_symbol, range_dates)
 index_close = index_data[index_symbol]['Adj Close']
@@ -35,7 +39,12 @@ index_close = index_data[index_symbol]['Adj Close']
 print()
 days_range = (20, 90)  # 200)
 min_days = 4
-for symbol, data in all_data.items():
+if args.symbol is None:
+    symbols = all_data.keys()
+else:
+    symbols = [args.symbol]
+for symbol in symbols:
+    data = all_data[symbol]
     price = data['Adj Close']
 
     signals = pd.DataFrame(index=price.index)
