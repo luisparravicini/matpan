@@ -5,6 +5,7 @@ from loader import load_all_data
 from checkpoint_manager import CheckpointManager
 import pandas as pd
 import numpy as np
+from strategies import StrategyFindBestMA, StrategyRandom01
 
 
 def setup():
@@ -41,4 +42,17 @@ def setup():
         ckp_manager.save_base(state)
 
     print("using dates [%s - %s]" % range_dates)
-    return (today, range_dates, conf, prices_manager, all_data, ckp_manager)
+
+    strategy = StrategyFindBestMA(ckp_manager)
+    # strategy = StrategyRandom01(ckp_manager)
+    print(f'using strategy {type(strategy).__name__}')
+    strategy.load(all_data.keys(), all_data)
+
+    return (
+        today,
+        range_dates,
+        conf,
+        prices_manager,
+        all_data,
+        ckp_manager,
+        strategy)

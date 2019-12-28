@@ -131,3 +131,33 @@ class StrategyFindBestMA:
         self.ckp_manager.save(
             StrategyFindBestMA.CKP_FNAME,
             data)
+
+    def signals(self, symbol, days_range):
+        price = self.all_data[symbol]['Adj Close']
+
+        signals = pd.DataFrame(index=price.index)
+        for i in range(days_range[0], days_range[1] + 1):
+            col = 'sma_%d' % i
+            signals[col] = price.rolling(i).mean()
+            col = 'ema_%d' % i
+            signals[col] = price.ewm(span=i, adjust=False).mean()
+
+        signals['price'] = price
+        positions = pd.DataFrame(index=signals.index).fillna(0)
+        short_window = days_range[0]
+        long_window = days_range[1]
+        ma_short = signals['ema_%d' % short_window]
+        ma_long = signals['ema_%d' % long_window]
+
+        signals['signal'] = 0
+        signals['signal'][short_window:] = np.where(
+            ma_short[short_window:] > ma_long[short_window:],
+            1, 0)
+        signals['position'] = signals['signal'].diff()
+
+        plot_series = (
+            (ma_short, 'EMA %d' % short_window),
+            (ma_long, 'EMA %d' % long_window),
+        )
+
+        return (signals, plot_series)
