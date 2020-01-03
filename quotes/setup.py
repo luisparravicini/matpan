@@ -43,8 +43,8 @@ def setup():
 
     print("using dates [%s - %s]" % range_dates)
 
-    strategy = StrategyFindBestMA(ckp_manager)
-    # strategy = StrategyRandom01(ckp_manager)
+    # strategy = StrategyFindBestMA(ckp_manager)
+    strategy = StrategyRandom01(ckp_manager)
     print(f'using strategy {type(strategy).__name__}')
     strategy.load(all_data.keys(), all_data)
 
