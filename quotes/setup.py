@@ -24,7 +24,11 @@ def setup():
     else:
         blacklist = set(['CAPU', 'PESA', 'PSUR', 'POLL'])
         symbols = conf.symbols()
-        all_data = load_all_data(prices_manager, blacklist, symbols, range_dates)
+        all_data = load_all_data(
+            prices_manager,
+            blacklist,
+            symbols,
+            range_dates)
 
         print('calculating returns')
         for data in all_data.values():
